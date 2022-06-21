@@ -60,10 +60,22 @@ class PythonCdkCicdCodeartifactStack(Stack):
         pip_mirror_codeartifact_repository.add_depends_on(codeartifact_domain)
         pip_private_codeartifact_repository.add_depends_on(pip_mirror_codeartifact_repository)
 
+        access_logs_bucket = s3.Bucket(
+            self,
+            "AccessLogsBucket",
+            bucket_name="sample-cdk-access-logs-" + self.account,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            encryption=s3.BucketEncryption.S3_MANAGED,
+            enforce_ssl=True,
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True,
+        )
+
         pipeline_artifact_bucket = s3.Bucket(
             self,
             "PipelineArtifactBucket",
             bucket_name="sample-cdk-artifact-" + self.account,
+            server_access_logs_bucket=access_logs_bucket,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             encryption=s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
@@ -72,7 +84,7 @@ class PythonCdkCicdCodeartifactStack(Stack):
         )
 
         NagSuppressions.add_resource_suppressions(
-            pipeline_artifact_bucket,
+            access_logs_bucket,
             [NagPackSuppression(id="AwsSolutions-S1", reason="Cannot log to itself")],
             True
         )
