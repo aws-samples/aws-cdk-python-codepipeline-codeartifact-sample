@@ -165,8 +165,7 @@ class PythonCdkCicdCodeartifactStack(Stack):
                         actions=[
                             "codeartifact:ReadFromRepository",
                             "codeartifact:GetRepositoryEndpoint",
-                            "codeartifact:List*",
-                            "codeartifact:PublishPackageVersion"
+                            "codeartifact:List*"
                         ],
                     )
                 ]
