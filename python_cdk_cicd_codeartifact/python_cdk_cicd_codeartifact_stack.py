@@ -39,26 +39,16 @@ class PythonCdkCicdCodeartifactStack(Stack):
             domain_name="aws-sample-domain",
         )
 
-        pip_mirror_codeartifact_repository = codeartifact.CfnRepository(
-            self,
-            "PipMirrorCodeArtifactRepository",
-            domain_name=codeartifact_domain.domain_name,
-            repository_name="pip-mirror",
-            description="Mirror of PyPi for local caching",
-            external_connections=["public:pypi"],
-        )
-
         pip_private_codeartifact_repository = codeartifact.CfnRepository(
             self,
             "PipPrivateCodeArtifactRepository",
             domain_name=codeartifact_domain.domain_name,
             repository_name="pip",
-            description="MPrivate PyPi repo",
-            upstreams=[pip_mirror_codeartifact_repository.repository_name],
+            description="Private PyPi repo",
+            external_connections=["public:pypi"],
         )
 
-        pip_mirror_codeartifact_repository.add_depends_on(codeartifact_domain)
-        pip_private_codeartifact_repository.add_depends_on(pip_mirror_codeartifact_repository)
+        pip_private_codeartifact_repository.add_depends_on(codeartifact_domain)
 
         access_logs_bucket = s3.Bucket(
             self,
