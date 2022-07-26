@@ -17,6 +17,7 @@ from aws_cdk import aws_codeartifact as codeartifact
 from aws_cdk import aws_codepipeline as codepipeline
 from aws_cdk import aws_codepipeline_actions as codepipeline_actions
 from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_kms as kms
 from python_cdk_cicd_codeartifact.custom_constructs.build_and_publish_package import BuildAndPublishPackage
 from cdk_nag import NagSuppressions
 from cdk_nag import NagPackSuppression
@@ -50,12 +51,19 @@ class PythonCdkCicdCodeartifactStack(Stack):
 
         pip_private_codeartifact_repository.add_depends_on(codeartifact_domain)
 
+        codebuild_encryption_key = kms.Key(
+            self,
+            'codeBuildEncryptionKey',
+            enable_key_rotation=True
+        )
+
         access_logs_bucket = s3.Bucket(
             self,
             "AccessLogsBucket",
             bucket_name="sample-cdk-access-logs-" + self.account,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
-            encryption=s3.BucketEncryption.S3_MANAGED,
+            encryption=s3.BucketEncryption.KMS,
+            encryption_key=codebuild_encryption_key,
             enforce_ssl=True,
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
@@ -67,7 +75,8 @@ class PythonCdkCicdCodeartifactStack(Stack):
             bucket_name="sample-cdk-artifact-" + self.account,
             server_access_logs_bucket=access_logs_bucket,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
-            encryption=s3.BucketEncryption.S3_MANAGED,
+            encryption=s3.BucketEncryption.KMS,
+            encryption_key=codebuild_encryption_key,
             enforce_ssl=True,
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True,
@@ -291,6 +300,8 @@ class PythonCdkCicdCodeartifactStack(Stack):
                     "Action::s3:GetBucket*",
                     "Action::s3:GetObject*",
                     "Action::s3:List*",
+                    "Action::kms:GenerateDataKey*",
+                    "Action::kms:ReEncrypt*",
                     "Resource::<PipelineArtifactBucketD127CCF6.Arn>/*"
                 ])
             ]
@@ -306,6 +317,8 @@ class PythonCdkCicdCodeartifactStack(Stack):
                     "Action::s3:GetBucket*",
                     "Action::s3:GetObject*",
                     "Action::s3:List*",
+                    "Action::kms:GenerateDataKey*",
+                    "Action::kms:ReEncrypt*",
                     "Resource::<PipelineArtifactBucketD127CCF6.Arn>/*"
                 ])
             ]
@@ -321,16 +334,10 @@ class PythonCdkCicdCodeartifactStack(Stack):
                     "Action::s3:GetBucket*",
                     "Action::s3:GetObject*",
                     "Action::s3:List*",
+                    "Action::kms:GenerateDataKey*",
+                    "Action::kms:ReEncrypt*",
                     "Resource::<PipelineArtifactBucketD127CCF6.Arn>/*"
                 ])
-            ]
-        )
-
-        NagSuppressions.add_resource_suppressions_by_path(
-            self,
-            "/PythonCdkCicdCodeartifactStack/RunUnitTests/Resource",
-            [
-                NagPackSuppression(id="AwsSolutions-CB4", reason="False-positive. Encryption key is applied")
             ]
         )
 
@@ -355,16 +362,10 @@ class PythonCdkCicdCodeartifactStack(Stack):
                     "Action::s3:GetBucket*",
                     "Action::s3:GetObject*",
                     "Action::s3:List*",
+                    "Action::kms:GenerateDataKey*",
+                    "Action::kms:ReEncrypt*",
                     "Resource::<PipelineArtifactBucketD127CCF6.Arn>/*"
                 ])
-            ]
-        )
-
-        NagSuppressions.add_resource_suppressions_by_path(
-            self,
-            "/PythonCdkCicdCodeartifactStack/SelfMutate/Resource",
-            [
-                NagPackSuppression(id="AwsSolutions-CB4", reason="False-positive. Encryption key is applied")
             ]
         )
 
@@ -390,16 +391,10 @@ class PythonCdkCicdCodeartifactStack(Stack):
                     "Action::s3:GetBucket*",
                     "Action::s3:GetObject*",
                     "Action::s3:List*",
+                    "Action::kms:GenerateDataKey*",
+                    "Action::kms:ReEncrypt*",
                     "Resource::<PipelineArtifactBucketD127CCF6.Arn>/*"
                 ])
-            ]
-        )
-
-        NagSuppressions.add_resource_suppressions_by_path(
-            self,
-            "/PythonCdkCicdCodeartifactStack/BuildSamplePackage/sample-package/Resource",
-            [
-                NagPackSuppression(id="AwsSolutions-CB4", reason="False-positive. Encryption key is applied")
             ]
         )
 
